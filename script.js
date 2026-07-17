@@ -42,7 +42,7 @@ function showLoginModal() {
   document.getElementById('loginModalOverlay').classList.add('active');
   document.getElementById('loginPassword').value = '';
   document.getElementById('loginError').classList.remove('show');
-  document.getElementById('loginPassword').focus();
+  setTimeout(function() { document.getElementById('loginPassword').focus(); }, 300);
 }
 
 function closeLoginModal() {
@@ -114,15 +114,22 @@ function updateCartBadge() {
   if (ce) ce.textContent = c;
   if (te) te.textContent = 'Rp' + t.toLocaleString('id-ID');
 }
-function openCartModal() { document.getElementById('cartModalOverlay').classList.add('active'); renderCartItems(); updatePayUI(); }
+
+// MODAL BUKA/TUTUP
+function openCartModal() { 
+  document.getElementById('cartModalOverlay').classList.add('active'); 
+  renderCartItems(); updatePayUI(); 
+}
 function closeCartModal() {
   document.getElementById('cartModalOverlay').classList.remove('active');
-  buktiData = null; var p = document.getElementById('previewBuktiImg'); if (p) p.style.display = 'none';
+  buktiData = null; 
+  var p = document.getElementById('previewBuktiImg'); if (p) p.style.display = 'none';
   var inp = document.getElementById('buktiBayarInput'); if (inp) inp.value = '';
   var fn = document.getElementById('buktiFileName'); if (fn) fn.textContent = 'Tidak ada file dipilih';
   payMethod = 'cash'; updatePayUI();
 }
 function closeBuktiModal() { document.getElementById('buktiModalOverlay').classList.remove('active'); }
+
 function renderCartItems() {
   var c = document.getElementById('cartItemList'); if (!c) return;
   if (!cart.length) { c.innerHTML = '<p style="text-align:center;padding:40px;color:#999;">Keranjang masih kosong</p>'; document.getElementById('cartTotalDisplay').textContent = 'Total: Rp0'; document.getElementById('checkoutBtn').disabled = true; return; }
@@ -147,8 +154,7 @@ function updatePayUI() {
 }
 function previewBukti(event) {
   var f = event.target.files[0]; if (!f) return;
-  var fn = document.getElementById('buktiFileName');
-  if (fn && f) fn.textContent = f.name;
+  var fn = document.getElementById('buktiFileName'); if (fn && f) fn.textContent = f.name;
   var reader = new FileReader();
   reader.onload = function(e) { buktiData = e.target.result; var p = document.getElementById('previewBuktiImg'); if (p) { p.src = buktiData; p.style.display = 'block'; } document.getElementById('checkoutBtn').disabled = false; };
   reader.readAsDataURL(f);
@@ -179,7 +185,6 @@ function goToSellerPage() {
   document.getElementById('floatingCartBtn').style.display = 'none';
   switchSellerTab('orders'); renderOrders();
 }
-
 function goToBuyerPage() {
   sellerOn = false;
   document.getElementById('buyerPage').style.display = 'block';
@@ -187,9 +192,7 @@ function goToBuyerPage() {
   document.getElementById('floatingCartBtn').style.display = 'flex';
   renderBuyerMenu(); updateCartBadge();
 }
-
 function logoutSeller() { goToBuyerPage(); }
-
 function switchSellerTab(t) {
   currentTab = t;
   document.getElementById('tabOrders').style.display = t === 'orders' ? 'block' : 'none';
@@ -221,7 +224,6 @@ function clearArchive() { if (!confirm('Kosongkan semua arsip?')) return; localS
 // KELOLA MENU
 function renderMenuManager() { var all = MENU.food.map(function(i) { return Object.assign({}, i, { cat: 'food' }); }).concat(MENU.drinks.map(function(i) { return Object.assign({}, i, { cat: 'drinks' }); })); var q = (document.getElementById('menuSearchInput') || {}).value || ''; q = q.toLowerCase(); var filt = all.filter(function(i) { return !q || i.name.toLowerCase().indexOf(q) !== -1; }); var c = document.getElementById('menuManagerList'); if (!c) return; if (!filt.length) { c.innerHTML = '<div class="empty-state">Tidak ada menu ditemukan</div>'; return; } c.innerHTML = filt.map(function(item) { var img = getImg(item.id); var ih = img ? '<img src="' + img + '" class="item-image" alt="">' : '<div class="item-image" style="display:flex;align-items:center;justify-content:center;color:#ccc;font-weight:300;">' + item.name.charAt(0) + '</div>'; return '<div class="menu-manager-item">' + ih + '<div class="item-details"><div class="item-header"><span class="item-name">' + item.name + '</span><span class="item-price">Rp' + item.price.toLocaleString('id-ID') + '</span></div><div class="item-meta">' + (item.cat==='food'?'Makanan':'Minuman') + ' &middot; ' + item.variants.length + ' varian</div><div class="item-actions"><button class="btn-sm" onclick="editMenu(\'' + item.id + '\',\'' + item.cat + '\')">Edit</button><button class="btn-sm danger" onclick="delMenu(\'' + item.id + '\',\'' + item.cat + '\')">Hapus</button></div></div></div>'; }).join(''); }
 
-// FORM MENU
 function openMenuForm(eid, ecat) {
   var overlay = document.getElementById('menuFormOverlay');
   var title = document.getElementById('menuFormTitle');
@@ -261,26 +263,15 @@ function openMenuForm(eid, ecat) {
   }
   overlay.classList.add('active');
 }
-
 function closeMenuForm() { document.getElementById('menuFormOverlay').classList.remove('active'); tempImg = null; }
-
 function previewImage(input) {
-  var f = input.files[0];
-  if (!f) return;
-  var fn = document.getElementById('mfFileName');
-  if (fn) fn.textContent = f.name;
+  var f = input.files[0]; if (!f) return;
+  var fn = document.getElementById('mfFileName'); if (fn) fn.textContent = f.name;
   document.getElementById('btnRemoveImage').style.display = 'inline-flex';
-  
   var reader = new FileReader();
-  reader.onload = function(e) {
-    tempImg = e.target.result;
-    var prev = document.getElementById('mfPreview');
-    prev.src = tempImg;
-    prev.style.display = 'block';
-  };
+  reader.onload = function(e) { tempImg = e.target.result; var prev = document.getElementById('mfPreview'); prev.src = tempImg; prev.style.display = 'block'; };
   reader.readAsDataURL(f);
 }
-
 function resetMenuImage() {
   tempImg = null;
   document.getElementById('mfImageFile').value = '';
@@ -288,77 +279,17 @@ function resetMenuImage() {
   document.getElementById('mfFileName').textContent = 'Tidak ada file dipilih';
   document.getElementById('btnRemoveImage').style.display = 'none';
 }
-
 function saveMenu() {
-  var name = document.getElementById('mfName').value.trim();
-  var price = parseInt(document.getElementById('mfPrice').value) || 0;
-  var vraw = document.getElementById('mfVarian').value.trim();
-  var variants = vraw ? vraw.split(',').map(function(v) { return v.trim(); }).filter(Boolean) : ['Original'];
-  var cat = document.getElementById('mfCat').value;
-  var edit = document.getElementById('mfEdit').value === '1';
-  var eid = document.getElementById('mfId').value;
-  
-  if (!name) { toast('Nama menu wajib diisi', 'warning'); return; }
-  if (!price || price < 100) { toast('Harga minimal Rp100', 'warning'); return; }
-  if (!vraw) { toast('Varian wajib diisi', 'warning'); return; }
-  
-  if (edit) {
-    var found = false;
-    for (var i = 0; i < MENU.food.length; i++) {
-      if (MENU.food[i].id === eid) {
-        MENU.food[i].name = name; MENU.food[i].price = price; MENU.food[i].variants = variants;
-        if (cat === 'drinks') { MENU.drinks.push(MENU.food.splice(i, 1)[0]); }
-        found = true; break;
-      }
-    }
-    if (!found) {
-      for (var j = 0; j < MENU.drinks.length; j++) {
-        if (MENU.drinks[j].id === eid) {
-          MENU.drinks[j].name = name; MENU.drinks[j].price = price; MENU.drinks[j].variants = variants;
-          if (cat === 'food') { MENU.food.push(MENU.drinks.splice(j, 1)[0]); }
-          break;
-        }
-      }
-    }
-    if (tempImg) { IMAGES[eid] = tempImg; }
-    toast('Menu berhasil diperbarui');
-  } else {
-    var id = 'item-' + Date.now();
-    var newItem = { id: id, name: name, price: price, variants: variants };
-    if (cat === 'food') MENU.food.push(newItem);
-    else MENU.drinks.push(newItem);
-    if (tempImg) { IMAGES[id] = tempImg; }
-    toast('Menu baru berhasil ditambahkan');
-  }
-  
-  save('imgs', IMAGES);
-  save('menu', MENU);
-  renderBuyerMenu();
-  renderMenuManager();
-  closeMenuForm();
+  var name = document.getElementById('mfName').value.trim(); var price = parseInt(document.getElementById('mfPrice').value) || 0; var vraw = document.getElementById('mfVarian').value.trim(); var variants = vraw ? vraw.split(',').map(function(v) { return v.trim(); }).filter(Boolean) : ['Original']; var cat = document.getElementById('mfCat').value; var edit = document.getElementById('mfEdit').value === '1'; var eid = document.getElementById('mfId').value;
+  if (!name) { toast('Nama menu wajib diisi', 'warning'); return; } if (!price || price < 100) { toast('Harga minimal Rp100', 'warning'); return; } if (!vraw) { toast('Varian wajib diisi', 'warning'); return; }
+  if (edit) { var found = false; for (var i = 0; i < MENU.food.length; i++) { if (MENU.food[i].id === eid) { MENU.food[i].name = name; MENU.food[i].price = price; MENU.food[i].variants = variants; if (cat === 'drinks') { MENU.drinks.push(MENU.food.splice(i, 1)[0]); } found = true; break; } } if (!found) { for (var j = 0; j < MENU.drinks.length; j++) { if (MENU.drinks[j].id === eid) { MENU.drinks[j].name = name; MENU.drinks[j].price = price; MENU.drinks[j].variants = variants; if (cat === 'food') { MENU.food.push(MENU.drinks.splice(j, 1)[0]); } break; } } } if (tempImg) { IMAGES[eid] = tempImg; } toast('Menu berhasil diperbarui'); } else { var id = 'item-' + Date.now(); var newItem = { id: id, name: name, price: price, variants: variants }; if (cat === 'food') MENU.food.push(newItem); else MENU.drinks.push(newItem); if (tempImg) { IMAGES[id] = tempImg; } toast('Menu baru berhasil ditambahkan'); }
+  save('imgs', IMAGES); save('menu', MENU); renderBuyerMenu(); renderMenuManager(); closeMenuForm();
 }
-
 function editMenu(id, cat) { openMenuForm(id, cat); }
-function delMenu(id, cat) {
-  if (!confirm('Hapus menu ini?')) return;
-  var list = cat === 'food' ? MENU.food : MENU.drinks;
-  var idx = list.findIndex(function(i) { return i.id === id; });
-  if (idx === -1) return;
-  list.splice(idx, 1);
-  if (IMAGES[id]) { delete IMAGES[id]; save('imgs', IMAGES); }
-  save('menu', MENU);
-  renderBuyerMenu();
-  renderMenuManager();
-  toast('Menu dihapus', 'info');
-}
+function delMenu(id, cat) { if (!confirm('Hapus menu ini?')) return; var list = cat === 'food' ? MENU.food : MENU.drinks; var idx = list.findIndex(function(i) { return i.id === id; }); if (idx === -1) return; list.splice(idx, 1); if (IMAGES[id]) { delete IMAGES[id]; save('imgs', IMAGES); } save('menu', MENU); renderBuyerMenu(); renderMenuManager(); toast('Menu dihapus', 'info'); }
 
-// INIT
+// INIT - TIDAK PAKAI EVENT LISTENER LAGI
 window.addEventListener('DOMContentLoaded', function() {
   renderBuyerMenu();
   updateCartBadge();
-  
-  document.getElementById('cartModalOverlay').addEventListener('click', function(e) { if (e.target === this) closeCartModal(); });
-  document.getElementById('menuFormOverlay').addEventListener('click', function(e) { if (e.target === this) closeMenuForm(); });
-  document.getElementById('buktiModalOverlay').addEventListener('click', function(e) { if (e.target === this) closeBuktiModal(); });
-  document.getElementById('loginModalOverlay').addEventListener('click', function(e) { if (e.target === this) closeLoginModal(); });
 });

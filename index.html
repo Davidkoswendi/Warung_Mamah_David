@@ -16,8 +16,8 @@
     </nav>
 
     <div class="hero">
-      <h1>Murah & <span class="accent">Kenyang</span></h1>
-      <p>Pesan makanan mudah dan praktid di website ini</p>
+      <h1>Cita rasa <span class="accent">istimewa</span></h1>
+      <p>Pasta autentik & minuman segar pilihan</p>
     </div>
 
     <div class="container">
@@ -73,8 +73,8 @@
   </div>
 
   <!-- LOGIN MODAL -->
-  <div class="modal-overlay" id="loginModalOverlay">
-    <div class="modal-dialog modal-center login-modal">
+  <div class="modal-overlay" id="loginModalOverlay" onclick="closeLoginModal()">
+    <div class="modal-dialog modal-center" onclick="event.stopPropagation()">
       <div class="login-container">
         <div class="login-header">
           <div class="login-icon">
@@ -101,8 +101,8 @@
   </div>
 
   <!-- FORM MENU MODAL -->
-  <div class="modal-overlay" id="menuFormOverlay">
-    <div class="modal-dialog">
+  <div class="modal-overlay" id="menuFormOverlay" onclick="closeMenuForm()">
+    <div class="modal-dialog" onclick="event.stopPropagation()">
       <div class="modal-header">
         <h3 id="menuFormTitle">Tambah Menu</h3>
         <button class="modal-close-btn" onclick="closeMenuForm()">&times;</button>
@@ -141,8 +141,8 @@
   </div>
 
   <!-- MODAL KERANJANG -->
-  <div class="modal-overlay" id="cartModalOverlay">
-    <div class="modal-dialog">
+  <div class="modal-overlay" id="cartModalOverlay" onclick="closeCartModal()">
+    <div class="modal-dialog" onclick="event.stopPropagation()">
       <div class="modal-header">
         <h3>Keranjang</h3>
         <button class="modal-close-btn" onclick="closeCartModal()">&times;</button>
