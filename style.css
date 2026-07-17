@@ -1,4 +1,5 @@
 :root {
+  --cream: #fffdf7;
   --white: #ffffff;
   --black: #1a1a1a;
   --black-light: #2d2d2d;
@@ -13,7 +14,6 @@
   --gray: #757575;
   --gray-light: #e0e0e0;
   --gray-bg: #fafafa;
-  --cream: #fffdf7;
   --shadow-sm: 0 2px 8px rgba(0,0,0,0.06);
   --shadow: 0 4px 20px rgba(0,0,0,0.08);
   --shadow-md: 0 8px 32px rgba(0,0,0,0.12);
@@ -150,40 +150,56 @@ body {
 }
 .floating-cart-total { font-size: 0.85rem; font-weight: 500; }
 
-/* ===== MODAL ===== */
+/* ===== MODAL - DIPERBAIKI ===== */
 .modal-overlay {
-  display: flex; position: fixed; inset: 0; 
+  display: none;
+  position: fixed;
+  inset: 0;
   background: rgba(0,0,0,0);
   backdrop-filter: blur(0);
   -webkit-backdrop-filter: blur(0);
-  z-index: 200; justify-content: center; align-items: flex-end;
-  pointer-events: none; transition: all 0.4s var(--smooth);
+  z-index: 999;
+  justify-content: center;
+  align-items: flex-end;
+  transition: background 0.3s ease, backdrop-filter 0.3s ease;
 }
-.modal-overlay.active { 
+.modal-overlay.active {
+  display: flex;
   background: rgba(0,0,0,0.5);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  pointer-events: auto; 
 }
 
-/* Bottom sheet mobile */
+/* Bottom sheet */
 .modal-dialog {
-  background: var(--white); border-radius: 24px 24px 0 0; width: 100%;
-  max-width: 520px; max-height: 85vh; overflow-y: auto;
+  background: var(--white);
+  border-radius: 24px 24px 0 0;
+  width: 100%;
+  max-width: 520px;
+  max-height: 85vh;
+  overflow-y: auto;
   box-shadow: 0 -12px 48px rgba(0,0,0,0.15);
   transform: translateY(100%);
-  transition: transform 0.45s cubic-bezier(0.32, 0.72, 0, 1);
+  transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1);
 }
-.modal-overlay.active .modal-dialog { transform: translateY(0); }
+.modal-overlay.active .modal-dialog {
+  transform: translateY(0);
+}
 
 /* Center modal */
 .modal-center {
-  border-radius: 24px; max-width: 400px; width: 100%;
-  transform: scale(0.95); opacity: 0;
-  transition: transform 0.4s var(--smooth), opacity 0.3s var(--smooth);
-  box-shadow: var(--shadow-lg);
+  border-radius: 24px;
+  max-width: 400px;
+  width: 100%;
+  margin: auto;
+  transform: scale(0.9);
+  opacity: 0;
+  transition: transform 0.3s ease, opacity 0.3s ease;
 }
-.modal-overlay.active .modal-center { transform: scale(1); opacity: 1; }
+.modal-overlay.active .modal-center {
+  transform: scale(1);
+  opacity: 1;
+}
 
 .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 24px 24px 0; margin-bottom: 16px; }
 .modal-header h3 { font-family: 'Playfair Display', serif; font-size: 1.4rem; font-weight: 700; color: var(--black); }
@@ -192,10 +208,11 @@ body {
   width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;
   border-radius: 50%; transition: all 0.25s var(--smooth);
 }
-.modal-close-btn:hover { background: var(--red-pale); color: var(--red); transform: rotate(90deg); }
+.modal-close-btn:hover { background: var(--red-pale); color: var(--red); }
 .modal-body { padding: 0 24px 20px; }
 .modal-footer { padding: 16px 24px 24px; display: flex; gap: 10px; }
 
+/* Sisanya sama seperti sebelumnya... */
 /* ===== LOGIN MODAL ===== */
 .login-container {
   background: var(--white); border-radius: var(--radius); padding: 40px 32px;
@@ -468,18 +485,22 @@ body {
   .upload-filename { text-align: center; }
   .login-container { padding: 28px 20px; }
   
+  /* Mobile: modal di bawah */
   .modal-overlay { align-items: flex-end; }
   .modal-dialog {
     border-radius: 24px 24px 0 0;
     transform: translateY(100%);
-    transition: transform 0.45s cubic-bezier(0.32, 0.72, 0, 1);
+    transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1);
   }
   .modal-overlay.active .modal-dialog { transform: translateY(0); }
   
+  /* Login & bukti tetap center */
   .modal-center {
-    border-radius: 24px; margin: auto 16px;
-    transform: scale(0.95); opacity: 0;
-    transition: transform 0.4s var(--smooth), opacity 0.3s var(--smooth);
+    border-radius: 24px;
+    margin: auto 16px;
+    transform: scale(0.9);
+    opacity: 0;
+    transition: transform 0.3s ease, opacity 0.3s ease;
   }
   .modal-overlay.active .modal-center { transform: scale(1); opacity: 1; }
 }
@@ -490,11 +511,14 @@ body {
   .menu-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
   .seller-container { max-width: 800px; }
   
+  /* Desktop: semua modal di tengah */
   .modal-overlay { align-items: center; justify-content: center; }
   .modal-dialog {
-    border-radius: 24px; margin: auto;
-    transform: scale(0.95); opacity: 0;
-    transition: transform 0.4s var(--smooth), opacity 0.3s var(--smooth);
+    border-radius: 24px;
+    margin: auto;
+    transform: scale(0.9);
+    opacity: 0;
+    transition: transform 0.3s ease, opacity 0.3s ease;
   }
   .modal-overlay.active .modal-dialog { transform: scale(1); opacity: 1; }
   .modal-center { border-radius: 24px; margin: auto; }
