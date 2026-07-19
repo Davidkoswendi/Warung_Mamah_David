@@ -22,7 +22,7 @@ var tempImg = null;
 
 // KONFIGURASI FONNTE
 var FONNTE_TOKEN = '1ABbusbEvWEoWV95ovM7';
-var FONNTE_TARGET = '6282114479342';
+var SELLER_PHONE = '6282114479342'; // Nomor WA Mamah David (082114479342)
 
 // LOAD
 try { var i = JSON.parse(localStorage.getItem('imgs')); if(i) IMAGES = i; } catch(e) {}
@@ -164,9 +164,8 @@ function previewBukti(event) {
   reader.readAsDataURL(f);
 }
 
-// FUNGSI KIRIM WHATSAPP VIA FONNTE (FORMAT STRUK ELEGAN)
-function sendWhatsAppOrder(orderData) {
-  // Hitung jumlah item total
+// FUNGSI KIRIM WHATSAPP VIA FONNTE (OTOMATIS KE PENJUAL)
+function sendWhatsAppToSeller(orderData) {
   var totalItems = orderData.items.reduce(function(s, i) { return s + i.qty; }, 0);
   
   // Format struk elegan
@@ -188,8 +187,7 @@ function sendWhatsAppOrder(orderData) {
   
   orderData.items.forEach(function(item, index) {
     var subtotal = item.price * item.qty;
-    var num = (index + 1).toString();
-    message += ' ' + num + '. ' + item.name + '\n';
+    message += ' ' + (index + 1) + '. ' + item.name + '\n';
     message += '    ▸ ' + item.variant + '\n';
     message += '    ▸ ' + item.qty + ' × Rp' + item.price.toLocaleString('id-ID') + '\n';
     message += '    ▸ Subtotal: *Rp' + subtotal.toLocaleString('id-ID') + '*\n';
@@ -206,9 +204,9 @@ function sendWhatsAppOrder(orderData) {
   message += '   berbelanja di Warung\n';
   message += '   Pojok Mamah David! 😊\n';
   message += '━━━━━━━━━━━━━━━━━━━━━━━\n';
-  message += '\n⚠️ _Segera proses pesanan ini_';
+  message += '\n⚠️ _Pesanan dari: ' + orderData.customer + '_';
   
-  // Kirim via Fonnte API
+  // Kirim via Fonnte API ke nomor penjual
   fetch('https://api.fonnte.com/send', {
     method: 'POST',
     headers: {
@@ -216,7 +214,7 @@ function sendWhatsAppOrder(orderData) {
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({
-      target: FONNTE_TARGET,
+      target: SELLER_PHONE,
       message: message,
       countryCode: '62'
     })
@@ -225,19 +223,18 @@ function sendWhatsAppOrder(orderData) {
     return response.json();
   })
   .then(function(data) {
-    console.log('WhatsApp sent:', data);
+    console.log('Fonnte sent:', data);
     if (data.status) {
-      toast('Pesanan berhasil dikirim ke WhatsApp!', 'success', 4000);
+      console.log('✅ Notifikasi otomatis terkirim ke penjual');
     } else {
-      toast('Pesanan tersimpan, tapi gagal kirim WA: ' + (data.reason || 'Unknown error'), 'warning', 4000);
+      console.log('❌ Gagal kirim notifikasi:', data.reason);
     }
   })
   .catch(function(error) {
-    console.error('Error sending WhatsApp:', error);
-    toast('Pesanan tersimpan, tapi gagal kirim WA. Cek koneksi.', 'warning', 5000);
+    console.error('Error Fonnte:', error);
   });
   
-  // Kirim gambar bukti jika ada (via Fonnte media)
+  // Kirim bukti pembayaran jika QR
   if (orderData.buktiBayar && orderData.paymentMethod === 'qr') {
     fetch('https://api.fonnte.com/send', {
       method: 'POST',
@@ -246,8 +243,8 @@ function sendWhatsAppOrder(orderData) {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        target: FONNTE_TARGET,
-        message: '📎 *BUKTI PEMBAYARAN QR*\n━━━━━━━━━━━━━━━━━━━━━━━\nPelanggan: ' + orderData.customer + '\nTotal: Rp' + orderData.total.toLocaleString('id-ID'),
+        target: SELLER_PHONE,
+        message: '📎 *BUKTI PEMBAYARAN QR*\nPelanggan: ' + orderData.customer + '\nTotal: Rp' + orderData.total.toLocaleString('id-ID'),
         url: orderData.buktiBayar,
         filename: 'bukti-bayar.jpg',
         countryCode: '62'
@@ -277,8 +274,8 @@ function checkout() {
   orders.push(order); 
   save('orders', orders);
   
-  // Kirim WhatsApp via Fonnte
-  sendWhatsAppOrder(order);
+  // 1. Kirim otomatis via Fonnte ke penjual
+  sendWhatsAppToSeller(order);
   
   cart = []; 
   updateCartBadge();
@@ -290,7 +287,8 @@ function checkout() {
   payMethod = 'cash'; 
   updatePayUI();
   closeCartModal();
-  toast('Pesanan berhasil dikirim!', 'success', 4000);
+  
+  toast('✅ Pesanan berhasil! Notifikasi terkirim ke penjual 📤', 'success', 5000);
   if (sellerOn) renderOrders();
 }
 
