@@ -2,14 +2,14 @@
 var IMAGES = {};
 var MENU = {
   food: [
-    { id: 'spaghetti', name: 'Spaghetti', price: 25000, variants: ['Bolognese', 'Carbonara', 'Aglio Olio', 'Pesto'] },
-    { id: 'macaroni', name: 'Macaroni', price: 22000, variants: ['Panggang Keju', 'Saus Krim', 'Pedas Napoli'] },
-    { id: 'katsu', name: 'Chicken Katsu', price: 28000, variants: ['Original', 'Teriyaki', 'Pedas Sambal'] }
+    { id: 'spaghetti', name: 'Spaghetti', price: 25000, variants: ['Bolognese', 'Carbonara', 'Aglio Olio', 'Pesto'], useCustomVariant: false },
+    { id: 'macaroni', name: 'Macaroni', price: 22000, variants: ['Panggang Keju', 'Saus Krim', 'Pedas Napoli'], useCustomVariant: false },
+    { id: 'katsu', name: 'Chicken Katsu', price: 28000, variants: ['Original', 'Teriyaki', 'Pedas Sambal'], useCustomVariant: false }
   ],
   drinks: [
-    { id: 'popice', name: 'Pop Ice', price: 7000, variants: ['Coklat','Stroberi','Vanilla','Taro','Mangga','Melon','Anggur','Blueberry','Leci'] },
-    { id: 'nutrisari', name: 'Nutrisari', price: 5000, variants: ['Jeruk Manis','Jambu Merah','Mangga','Anggur'] },
-    { id: 'tehsisri', name: 'Teh Sisri', price: 4000, variants: ['Original','Vanilla','Melati Wangi'] }
+    { id: 'popice', name: 'Pop Ice', price: 7000, variants: [], useCustomVariant: true },
+    { id: 'nutrisari', name: 'Nutrisari', price: 5000, variants: [], useCustomVariant: true },
+    { id: 'tehsisri', name: 'Teh Sisri', price: 4000, variants: [], useCustomVariant: true }
   ]
 };
 var cart = [];
@@ -20,9 +20,8 @@ var buktiData = null;
 var currentTab = 'orders';
 var tempImg = null;
 
-// KONFIGURASI FONNTE
-var FONNTE_TOKEN = '1ABbusbEvWEoWV95ovM7';
-var SELLER_PHONE = '6282114479342'; // Nomor WA Mamah David (082114479342)
+// NOMOR WHATSAPP PENJUAL (Mamah David)
+var SELLER_PHONE = '6282114479342'; // 082114479342
 
 // LOAD
 try { var i = JSON.parse(localStorage.getItem('imgs')); if(i) IMAGES = i; } catch(e) {}
@@ -90,27 +89,55 @@ function renderBuyerMenu() {
   if (fg) fg.innerHTML = MENU.food.map(card).join('');
   if (dg) dg.innerHTML = MENU.drinks.map(card).join('');
 }
+
+// Card menu (bisa untuk makanan dan minuman)
 function card(item) {
   var img = getImg(item.id);
   var ih = img ? '<img src="' + img + '" class="card-image" alt="">' : '<div class="card-image" style="display:flex;align-items:center;justify-content:center;color:#ccc;font-size:2.5rem;font-weight:300;">' + item.name.charAt(0) + '</div>';
+  
+  var variantInput = '';
+  if (item.useCustomVariant) {
+    // Jika useCustomVariant = true, tampilkan input teks bebas
+    variantInput = '<label class="card-label">Varian (ketik sendiri)</label><input type="text" class="card-input" id="v-' + item.id + '" placeholder="Contoh: Coklat, Stroberi, dll">';
+  } else {
+    // Jika useCustomVariant = false, tampilkan dropdown varian
+    variantInput = '<label class="card-label">Varian</label><select class="card-select" id="v-' + item.id + '">' + item.variants.map(function(v) { return '<option>' + v + '</option>'; }).join('') + '</select>';
+  }
+  
   return '<div class="menu-card">' + ih +
     '<div class="card-title">' + item.name + '</div><div class="card-price">Rp' + item.price.toLocaleString('id-ID') + '</div>' +
-    '<label class="card-label">Varian</label><select class="card-select" id="v-' + item.id + '">' + item.variants.map(function(v) { return '<option>' + v + '</option>'; }).join('') + '</select>' +
+    variantInput +
     '<label class="card-label">Jumlah</label><input type="number" class="card-input" id="q-' + item.id + '" value="1" min="1" max="15">' +
-    '<button class="add-btn" onclick="addCart(\'' + item.id + '\')">Tambah ke Keranjang</button></div>';
+    '<button class="add-btn" onclick="addToCart(\'' + item.id + '\')">Tambah ke Keranjang</button></div>';
 }
 
 // KERANJANG
-function addCart(id) {
+function addToCart(id) {
   var all = MENU.food.concat(MENU.drinks);
   var p = all.find(function(x) { return x.id === id; });
   if (!p) return;
-  var ve = document.getElementById('v-' + id); var qe = document.getElementById('q-' + id);
+  var ve = document.getElementById('v-' + id); 
+  var qe = document.getElementById('q-' + id);
   if (!ve || !qe) return;
-  cart.push({ id: id, name: p.name, price: p.price, variant: ve.value, qty: parseInt(qe.value) || 1 });
+  
+  var variantValue;
+  if (p.useCustomVariant) {
+    // Untuk varian bebas, validasi tidak boleh kosong
+    variantValue = ve.value.trim();
+    if (!variantValue) {
+      toast('Silakan isi varian terlebih dahulu', 'warning');
+      return;
+    }
+  } else {
+    // Untuk varian dropdown
+    variantValue = ve.value;
+  }
+  
+  cart.push({ id: id, name: p.name, price: p.price, variant: variantValue, qty: parseInt(qe.value) || 1 });
   updateCartBadge();
-  toast(p.name + ' ditambahkan ke keranjang');
+  toast(p.name + ' (' + variantValue + ') ditambahkan ke keranjang');
 }
+
 function updateCartBadge() {
   var c = cart.reduce(function(s, i) { return s + i.qty; }, 0);
   var t = cart.reduce(function(s, i) { return s + i.price * i.qty; }, 0);
@@ -164,95 +191,51 @@ function previewBukti(event) {
   reader.readAsDataURL(f);
 }
 
-// FUNGSI KIRIM WHATSAPP VIA FONNTE (OTOMATIS KE PENJUAL)
-function sendWhatsAppToSeller(orderData) {
+// FUNGSI KIRIM PESANAN OTOMATIS KE WHATSAPP PENJUAL
+function kirimPesananKePenjual(orderData) {
   var totalItems = orderData.items.reduce(function(s, i) { return s + i.qty; }, 0);
   
-  // Format struk elegan
   var message = '';
-  message += '╭───────────────────────╮\n';
-  message += '│    🍽️ WARUNG POJOK     │\n';
-  message += '│     MAMAH DAVID       │\n';
-  message += '╰───────────────────────╯\n\n';
-  message += '📋 *STRUK PESANAN*\n';
-  message += '━━━━━━━━━━━━━━━━━━━━━━━\n\n';
-  message += '👤 *Pelanggan*\n';
-  message += '   ' + orderData.customer + '\n\n';
-  message += '🕐 *Waktu*\n';
-  message += '   ' + orderData.time + '\n\n';
-  message += '💳 *Pembayaran*\n';
-  message += '   ' + (orderData.paymentMethod === 'qr' ? 'QR Code' : 'Tunai (Cash)') + '\n\n';
-  message += '━━━━━━━━━━━━━━━━━━━━━━━\n\n';
-  message += '🛒 *Pesanan*\n\n';
+  message += '================================\n';
+  message += '       PESANAN BARU!\n';
+  message += '================================\n';
+  message += '\n';
+  message += 'Pelanggan : ' + orderData.customer + '\n';
+  message += 'Waktu     : ' + orderData.time + '\n';
+  message += 'Bayar     : ' + (orderData.paymentMethod === 'qr' ? 'QR Code' : 'Tunai (Cash)') + '\n';
+  message += '\n';
+  message += '--------------------------------\n';
+  message += '\n';
+  message += 'PESANAN :\n';
+  message += '\n';
   
   orderData.items.forEach(function(item, index) {
     var subtotal = item.price * item.qty;
-    message += ' ' + (index + 1) + '. ' + item.name + '\n';
-    message += '    ▸ ' + item.variant + '\n';
-    message += '    ▸ ' + item.qty + ' × Rp' + item.price.toLocaleString('id-ID') + '\n';
-    message += '    ▸ Subtotal: *Rp' + subtotal.toLocaleString('id-ID') + '*\n';
+    message += (index + 1) + '. ' + item.name + '\n';
+    message += '   ' + item.variant + '\n';
+    message += '   ' + item.qty + ' x Rp' + item.price.toLocaleString('id-ID') + '\n';
+    message += '   Subtotal : Rp' + subtotal.toLocaleString('id-ID') + '\n';
     if (index < orderData.items.length - 1) {
       message += '\n';
     }
   });
   
-  message += '\n━━━━━━━━━━━━━━━━━━━━━━━\n\n';
-  message += '📦 *Total Item*: ' + totalItems + ' item\n';
-  message += '💰 *TOTAL*: *Rp' + orderData.total.toLocaleString('id-ID') + '*\n\n';
-  message += '━━━━━━━━━━━━━━━━━━━━━━━\n';
-  message += '   Terima kasih telah\n';
-  message += '   berbelanja di Warung\n';
-  message += '   Pojok Mamah David! 😊\n';
-  message += '━━━━━━━━━━━━━━━━━━━━━━━\n';
-  message += '\n⚠️ _Pesanan dari: ' + orderData.customer + '_';
+  message += '\n';
+  message += '--------------------------------\n';
+  message += '\n';
+  message += 'Total Item : ' + totalItems + ' item\n';
+  message += 'TOTAL      : Rp' + orderData.total.toLocaleString('id-ID') + '\n';
+  message += '\n';
+  message += '================================\n';
+  message += '  Pesanan dari website\n';
+  message += '  Warung Pojok Mamah David\n';
+  message += '================================\n';
   
-  // Kirim via Fonnte API ke nomor penjual
-  fetch('https://api.fonnte.com/send', {
-    method: 'POST',
-    headers: {
-      'Authorization': FONNTE_TOKEN,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      target: SELLER_PHONE,
-      message: message,
-      countryCode: '62'
-    })
-  })
-  .then(function(response) {
-    return response.json();
-  })
-  .then(function(data) {
-    console.log('Fonnte sent:', data);
-    if (data.status) {
-      console.log('✅ Notifikasi otomatis terkirim ke penjual');
-    } else {
-      console.log('❌ Gagal kirim notifikasi:', data.reason);
-    }
-  })
-  .catch(function(error) {
-    console.error('Error Fonnte:', error);
-  });
+  var encodedMessage = encodeURIComponent(message);
+  var whatsappURL = 'https://wa.me/' + SELLER_PHONE + '?text=' + encodedMessage;
   
-  // Kirim bukti pembayaran jika QR
-  if (orderData.buktiBayar && orderData.paymentMethod === 'qr') {
-    fetch('https://api.fonnte.com/send', {
-      method: 'POST',
-      headers: {
-        'Authorization': FONNTE_TOKEN,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        target: SELLER_PHONE,
-        message: '📎 *BUKTI PEMBAYARAN QR*\nPelanggan: ' + orderData.customer + '\nTotal: Rp' + orderData.total.toLocaleString('id-ID'),
-        url: orderData.buktiBayar,
-        filename: 'bukti-bayar.jpg',
-        countryCode: '62'
-      })
-    }).catch(function(err) {
-      console.error('Error sending bukti:', err);
-    });
-  }
+  window.open(whatsappURL, '_blank');
+  toast('Pesanan dikirim ke WhatsApp penjual!', 'success', 4000);
 }
 
 function checkout() {
@@ -274,8 +257,7 @@ function checkout() {
   orders.push(order); 
   save('orders', orders);
   
-  // 1. Kirim otomatis via Fonnte ke penjual
-  sendWhatsAppToSeller(order);
+  kirimPesananKePenjual(order);
   
   cart = []; 
   updateCartBadge();
@@ -288,7 +270,6 @@ function checkout() {
   updatePayUI();
   closeCartModal();
   
-  toast('✅ Pesanan berhasil! Notifikasi terkirim ke penjual 📤', 'success', 5000);
   if (sellerOn) renderOrders();
 }
 
@@ -390,7 +371,8 @@ function renderMenuManager() {
   c.innerHTML = filt.map(function(item) { 
     var img = getImg(item.id); 
     var ih = img ? '<img src="' + img + '" class="item-image" alt="">' : '<div class="item-image" style="display:flex;align-items:center;justify-content:center;color:#ccc;font-weight:300;">' + item.name.charAt(0) + '</div>'; 
-    return '<div class="menu-manager-item">' + ih + '<div class="item-details"><div class="item-header"><span class="item-name">' + item.name + '</span><span class="item-price">Rp' + item.price.toLocaleString('id-ID') + '</span></div><div class="item-meta">' + (item.cat==='food'?'Makanan':'Minuman') + ' &middot; ' + item.variants.length + ' varian</div><div class="item-actions"><button class="btn-sm" onclick="editMenu(\'' + item.id + '\',\'' + item.cat + '\')">Edit</button><button class="btn-sm danger" onclick="delMenu(\'' + item.id + '\',\'' + item.cat + '\')">Hapus</button></div></div></div>'; 
+    var variantDisplay = item.useCustomVariant ? 'Varian bebas' : (item.variants.length > 0 ? item.variants.join(', ') : 'Tidak ada varian');
+    return '<div class="menu-manager-item">' + ih + '<div class="item-details"><div class="item-header"><span class="item-name">' + item.name + '</span><span class="item-price">Rp' + item.price.toLocaleString('id-ID') + '</span></div><div class="item-meta">' + (item.cat==='food'?'Makanan':'Minuman') + ' &middot; ' + (item.useCustomVariant ? 'Input bebas' : (item.variants.length + ' varian')) + '</div><div class="item-actions"><button class="btn-sm" onclick="editMenu(\'' + item.id + '\',\'' + item.cat + '\')">Edit</button><button class="btn-sm danger" onclick="delMenu(\'' + item.id + '\',\'' + item.cat + '\')">Hapus</button></div></div></div>'; 
   }).join(''); 
 }
 
@@ -404,6 +386,40 @@ function openMenuForm(eid, ecat) {
   document.getElementById('mfFileName').textContent = 'Tidak ada file dipilih';
   document.getElementById('btnRemoveImage').style.display = 'none';
   
+  // Tambahkan checkbox untuk useCustomVariant di form
+  var variantSection = document.getElementById('variantSection');
+  if (!variantSection) {
+    // Buat elemen checkbox jika belum ada
+    var modalBody = document.querySelector('#menuFormOverlay .modal-body');
+    var varianInput = document.getElementById('mfVarian');
+    var varianLabel = varianInput.previousElementSibling;
+    
+    // Hapus checkbox lama jika ada
+    var oldCheckbox = document.getElementById('variantCheckboxContainer');
+    if (oldCheckbox) oldCheckbox.remove();
+    
+    // Buat container checkbox
+    var checkboxContainer = document.createElement('div');
+    checkboxContainer.id = 'variantCheckboxContainer';
+    checkboxContainer.style.cssText = 'margin: 12px 0; display: flex; align-items: center; gap: 8px;';
+    checkboxContainer.innerHTML = '<input type="checkbox" id="mfUseCustomVariant" style="width: 18px; height: 18px; cursor: pointer;"> <label for="mfUseCustomVariant" style="font-size: 0.85rem; font-weight: 500; color: var(--black); cursor: pointer;">Varian bebas (pelanggan ketik sendiri)</label>';
+    
+    // Sisipkan setelah input varian
+    varianInput.parentNode.insertBefore(checkboxContainer, varianInput.nextElementSibling);
+    
+    // Event listener untuk checkbox
+    document.getElementById('mfUseCustomVariant').onchange = function() {
+      var isChecked = this.checked;
+      document.getElementById('mfVarian').disabled = isChecked;
+      if (isChecked) {
+        document.getElementById('mfVarian').value = '';
+        document.getElementById('mfVarian').placeholder = 'Varian bebas (diisi pelanggan)';
+      } else {
+        document.getElementById('mfVarian').placeholder = 'Original, Pedas';
+      }
+    };
+  }
+  
   if (eid) {
     title.textContent = 'Edit Menu';
     document.getElementById('mfEdit').value = '1';
@@ -414,7 +430,21 @@ function openMenuForm(eid, ecat) {
       document.getElementById('mfCat').value = ecat;
       document.getElementById('mfName').value = item.name;
       document.getElementById('mfPrice').value = item.price;
-      document.getElementById('mfVarian').value = item.variants.join(', ');
+      
+      // Set checkbox dan input varian
+      var useCustomCheckbox = document.getElementById('mfUseCustomVariant');
+      if (item.useCustomVariant) {
+        useCustomCheckbox.checked = true;
+        document.getElementById('mfVarian').value = '';
+        document.getElementById('mfVarian').disabled = true;
+        document.getElementById('mfVarian').placeholder = 'Varian bebas (diisi pelanggan)';
+      } else {
+        useCustomCheckbox.checked = false;
+        document.getElementById('mfVarian').value = item.variants.join(', ');
+        document.getElementById('mfVarian').disabled = false;
+        document.getElementById('mfVarian').placeholder = 'Original, Pedas';
+      }
+      
       if (IMAGES[eid]) {
         document.getElementById('mfPreview').src = IMAGES[eid];
         document.getElementById('mfPreview').style.display = 'block';
@@ -430,10 +460,21 @@ function openMenuForm(eid, ecat) {
     document.getElementById('mfName').value = '';
     document.getElementById('mfPrice').value = '';
     document.getElementById('mfVarian').value = '';
+    document.getElementById('mfVarian').disabled = false;
+    document.getElementById('mfVarian').placeholder = 'Original, Pedas';
+    document.getElementById('mfUseCustomVariant').checked = false;
   }
   overlay.classList.add('active');
 }
-function closeMenuForm() { document.getElementById('menuFormOverlay').classList.remove('active'); tempImg = null; }
+
+function closeMenuForm() { 
+  document.getElementById('menuFormOverlay').classList.remove('active'); 
+  tempImg = null; 
+  // Hapus checkbox container saat form ditutup
+  var oldCheckbox = document.getElementById('variantCheckboxContainer');
+  if (oldCheckbox) oldCheckbox.remove();
+}
+
 function previewImage(input) {
   var f = input.files[0]; if (!f) return;
   var fn = document.getElementById('mfFileName'); if (fn) fn.textContent = f.name;
@@ -453,20 +494,34 @@ function saveMenu() {
   var name = document.getElementById('mfName').value.trim(); 
   var price = parseInt(document.getElementById('mfPrice').value) || 0; 
   var vraw = document.getElementById('mfVarian').value.trim(); 
-  var variants = vraw ? vraw.split(',').map(function(v) { return v.trim(); }).filter(Boolean) : ['Original']; 
   var cat = document.getElementById('mfCat').value; 
   var edit = document.getElementById('mfEdit').value === '1'; 
   var eid = document.getElementById('mfId').value;
+  var useCustomVariant = document.getElementById('mfUseCustomVariant').checked;
   
   if (!name) { toast('Nama menu wajib diisi', 'warning'); return; } 
-  if (!price || price < 100) { toast('Harga minimal Rp100', 'warning'); return; } 
-  if (!vraw) { toast('Varian wajib diisi', 'warning'); return; }
+  if (!price || price < 100) { toast('Harga minimal Rp100', 'warning'); return; }
+  
+  // Tentukan variants berdasarkan useCustomVariant
+  var variants;
+  if (useCustomVariant) {
+    variants = []; // Array kosong untuk varian bebas
+  } else {
+    if (!vraw) { toast('Varian wajib diisi atau centang varian bebas', 'warning'); return; }
+    variants = vraw.split(',').map(function(v) { return v.trim(); }).filter(Boolean);
+    if (variants.length === 0) {
+      variants = ['Original'];
+    }
+  }
   
   if (edit) { 
     var found = false; 
     for (var i = 0; i < MENU.food.length; i++) { 
       if (MENU.food[i].id === eid) { 
-        MENU.food[i].name = name; MENU.food[i].price = price; MENU.food[i].variants = variants; 
+        MENU.food[i].name = name; 
+        MENU.food[i].price = price; 
+        MENU.food[i].variants = variants;
+        MENU.food[i].useCustomVariant = useCustomVariant;
         if (cat === 'drinks') { MENU.drinks.push(MENU.food.splice(i, 1)[0]); } 
         found = true; break; 
       } 
@@ -474,7 +529,10 @@ function saveMenu() {
     if (!found) { 
       for (var j = 0; j < MENU.drinks.length; j++) { 
         if (MENU.drinks[j].id === eid) { 
-          MENU.drinks[j].name = name; MENU.drinks[j].price = price; MENU.drinks[j].variants = variants; 
+          MENU.drinks[j].name = name; 
+          MENU.drinks[j].price = price; 
+          MENU.drinks[j].variants = variants;
+          MENU.drinks[j].useCustomVariant = useCustomVariant;
           if (cat === 'food') { MENU.food.push(MENU.drinks.splice(j, 1)[0]); } 
           break; 
         } 
@@ -484,7 +542,7 @@ function saveMenu() {
     toast('Menu berhasil diperbarui'); 
   } else { 
     var id = 'item-' + Date.now(); 
-    var newItem = { id: id, name: name, price: price, variants: variants }; 
+    var newItem = { id: id, name: name, price: price, variants: variants, useCustomVariant: useCustomVariant }; 
     if (cat === 'food') MENU.food.push(newItem); 
     else MENU.drinks.push(newItem); 
     if (tempImg) { IMAGES[id] = tempImg; } 
